@@ -170,6 +170,17 @@ export function formatWhole(n) {
   return formatMoney(value);
 }
 
+// Compact dollars for chart labels ("$6,820" — no cents, so value
+// labels fit in the narrow space above a bar).
+export function formatCompact(n) {
+  const value = Number(n) || 0;
+  return `$${Math.round(value).toLocaleString("en-US")}`;
+}
+
+// Days of November covered by the ledger (Nov 1–26); the dashboard
+// uses it for the average-spending-per-day note.
+export const DAYS_ELAPSED = 26;
+
 export function formatDate(iso) {
   const [y, m, d] = String(iso).split("-").map(Number);
   const date = new Date(y, (m || 1) - 1, d || 1);

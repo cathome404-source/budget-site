@@ -191,6 +191,10 @@ export function bind(root, store, rerender) {
     categoryFilter.addEventListener("change", () => {
       selectedCategory = categoryFilter.value;
       rerender();
+      // The filter re-renders the whole page; return focus to the
+      // control just used instead of dropping it.
+      const again = root.querySelector("[data-filter-category]");
+      if (again) again.focus();
     });
   }
 

@@ -48,13 +48,6 @@ export function renderBills(store) {
 </section>`;
 }
 
-function biggestExpenses(store) {
-  return [...store.state.transactions]
-    .filter((t) => t.type === "expense")
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5);
-}
-
 function monthTotalsLine(m) {
   const rate = m.income > 0 ? Math.round((m.saved / m.income) * 100) : 0;
   return `<li><span class="bill-name">${escapeHtml(m.month)}</span><span>income ${formatMoney(m.income)} · spending ${formatMoney(m.spending)} · saved ${formatMoney(m.saved)} · ${rate}% saved</span></li>`;
@@ -70,7 +63,7 @@ export function renderReports(store) {
     .filter((d) => d.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 
-  const biggest = biggestExpenses(store);
+  const biggest = store.biggestExpenses(5);
   const biggestItems = biggest
     .map(
       (tx, i) =>

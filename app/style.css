@@ -226,7 +226,7 @@ a:hover { color: var(--green-soft); }
 .chart-value-small { font-size: 12px; }
 .chart-axis { stroke: var(--border); stroke-width: 1; }
 .chart-grid { stroke: #ece5d2; stroke-width: 1; }
-.chart-grid-label { fill: var(--ink-muted); font-size: 11px; font-family: var(--font); font-variant-numeric: tabular-nums; }
+.chart-value-inside { fill: #fff; }
 .chart-donut-total { fill: var(--ink); font-size: 20px; font-weight: 700; font-family: var(--font); }
 .chart-donut-label { fill: var(--ink-muted); font-size: 12px; font-family: var(--font); }
 
@@ -658,4 +658,6 @@ input:focus, select:focus, button:focus-visible, a:focus-visible {
 
   .tx-date { width: 56px; }
   .tx-list li { flex-wrap: wrap; }
+  .bill-list li { flex-wrap: wrap; }
+  .bill-list li .bill-due { order: 3; }
 }

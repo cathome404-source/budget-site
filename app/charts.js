@@ -14,7 +14,7 @@
 //   Shopping #8a6a4f (brown)       Kids & School #e07b39 (orange)
 //   Savings #6aa84f (light green) Misc #8a8f8c (grey)
 
-import { formatMoney } from "./data.js";
+import { formatMoney, formatCompact } from "./data.js";
 
 export const CATEGORY_COLORS = {
   "Housing": "#1e4d3b",
@@ -121,11 +121,12 @@ export function monthlyBars(months) {
   const title = "Income versus spending, June to November 2026";
 
   // Light gridlines at half and full scale, so bar heights read
-  // against something instead of floating in empty space.
+  // against something instead of floating in empty space. No text
+  // on the lines: the per-bar value labels already carry the exact
+  // figures, and a scale label would collide with them.
   const gridline = (fraction) => {
     const y = baseline - fraction * plotHeight;
-    const label = formatMoney(max * fraction);
-    return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - padRight}" y2="${y.toFixed(1)}" class="chart-grid" /><text x="${width - padRight}" y="${(y - 4).toFixed(1)}" class="chart-grid-label" text-anchor="end">${label}</text>`;
+    return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - padRight}" y2="${y.toFixed(1)}" class="chart-grid" />`;
   };
   const grid = max > 0 ? gridline(0.5) + gridline(1) : "";
 
@@ -143,8 +144,13 @@ export function monthlyBars(months) {
       return [
         `<rect x="${incomeX.toFixed(1)}" y="${(baseline - incomeH).toFixed(1)}" width="${barWidth}" height="${incomeH.toFixed(1)}" rx="3" fill="${INCOME_COLOR}"><title>${escapeHtml(label)} income ${formatMoney(income)}</title></rect>`,
         `<rect x="${spendingX.toFixed(1)}" y="${(baseline - spendingH).toFixed(1)}" width="${barWidth}" height="${spendingH.toFixed(1)}" rx="3" fill="${SPENDING_COLOR}"><title>${escapeHtml(label)} spending ${formatMoney(spending)}</title></rect>`,
-        `<text x="${incomeX + barWidth / 2}" y="${(baseline - incomeH - 6).toFixed(1)}" class="chart-value chart-value-small" text-anchor="middle">${formatMoney(income)}</text>`,
-        `<text x="${spendingX + barWidth / 2}" y="${(baseline - spendingH - 6).toFixed(1)}" class="chart-value chart-value-small" text-anchor="middle">${formatMoney(spending)}</text>`,
+        // Compact labels ("$6,820", no cents): the full "$6,820.00"
+        // is ~58px wide but the two bar centres are only 40px apart,
+        // so full labels overlapped. The spending value sits inside
+        // its bar in white instead of above it — same fix, and the
+        // spending bars are always tall enough to hold it.
+        `<text x="${incomeX + barWidth / 2}" y="${(baseline - incomeH - 6).toFixed(1)}" class="chart-value chart-value-small" text-anchor="middle">${formatCompact(income)}</text>`,
+        `<text x="${spendingX + barWidth / 2}" y="${(baseline - spendingH + 16).toFixed(1)}" class="chart-value chart-value-small chart-value-inside" text-anchor="middle">${formatCompact(spending)}</text>`,
         `<text x="${cx}" y="${height - 8}" class="chart-label" text-anchor="middle">${escapeHtml(label)}</text>`,
       ].join("");
     })

@@ -8,6 +8,7 @@
 import {
   HOUSEHOLD_NAME,
   HOUSEHOLD_SUBTITLE,
+  DAYS_ELAPSED,
   categories,
   monthlyHistory,
   formatMoney,
@@ -101,10 +102,12 @@ export function render(store) {
   const recent = sortedTransactions(store).slice(0, 8);
   const billsDue = unpaid.slice(0, 3);
 
+  const avgPerDay = DAYS_ELAPSED > 0 ? spent / DAYS_ELAPSED : 0;
+
   const kpis = [
     kpiCard("Balance", formatMoney(balance), "checking + savings available"),
     kpiCard("Income in November", formatMoney(income), null, "positive"),
-    kpiCard("Spent in November", formatMoney(spent), null, "negative"),
+    kpiCard("Spent in November", formatMoney(spent), `avg ${formatMoney(avgPerDay)}/day over ${DAYS_ELAPSED} days`, "negative"),
     kpiCard("Saved in November", formatMoney(saved), `savings rate ${savingsRate}%`, "positive"),
     kpiCard("Bills due", `${unpaid.length} unpaid · ${formatMoney(unpaidTotal)}`, "due in November"),
   ].join("");

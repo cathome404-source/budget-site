@@ -68,3 +68,4 @@ try {
   throw error;
 }
 writeFileSync(join(out, 'dossier.json'), dossier);
+console.log(`Hearth & Ledger hand-in written to ${out} (dossier.json + app/ + screenshots/).`);

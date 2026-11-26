@@ -207,6 +207,18 @@ export function unpaidBillsTotal() {
   );
 }
 
+// The N largest single expense transactions, newest-first tiebreak
+// by date — the reports page's "Biggest single expenses" list.
+export function biggestExpenses(count = 5, list = state.transactions) {
+  return [...list]
+    .filter((t) => t.type === "expense")
+    .sort((a, b) => {
+      if (b.amount !== a.amount) return b.amount - a.amount;
+      return a.date < b.date ? 1 : -1;
+    })
+    .slice(0, count);
+}
+
 export function goalsTotals() {
   const saved = round2(
     state.goals.reduce((s, g) => s + (Number(g.saved) || 0), 0),
@@ -318,6 +330,7 @@ export const store = {
   budgetFor,
   unpaidBills,
   unpaidBillsTotal,
+  biggestExpenses,
   goalsTotals,
   addTransaction,
   editTransaction,

@@ -73,8 +73,11 @@ function goalCard(goal) {
     ? Math.round((goal.saved / goal.target) * 100)
     : 0;
   const toGo = Math.max(0, goal.target - goal.saved);
+  const funded = goal.saved >= goal.target && goal.target > 0
+    ? ` <span class="tag-paid">Fully funded</span>`
+    : "";
   return `<article class="card goal-card" data-goal-card="${escapeHtml(goal.id)}">
-    <h2>${escapeHtml(goal.name)}</h2>
+    <h2>${escapeHtml(goal.name)}${funded}</h2>
     <p class="goal-pct">${pct}%</p>
     <p class="goal-remaining">${formatWhole(goal.saved)} saved of ${formatWhole(goal.target)} · ${formatWhole(toGo)} to go</p>
     ${progressBarHtml(pct, "progress-bar", `${goal.name} ${pct} percent saved`)}

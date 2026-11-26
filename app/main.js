@@ -60,6 +60,11 @@ function render() {
 }
 
 window.addEventListener("hashchange", () => {
+  // An unknown hash is not a page: normalise the URL back to the
+  // dashboard instead of leaving "#/nope" in the address bar.
+  if (!routes[window.location.hash.replace(/^#/, "")]) {
+    history.replaceState(null, "", "#/dashboard");
+  }
   // A route change is a new page: start at the top, like a real
   // navigation. State changes (store.subscribe) re-render in place
   // and must NOT scroll — the user is mid-task on that page.
