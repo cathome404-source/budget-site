@@ -38,11 +38,33 @@ function clearContents(dir: string): void {
 const out = outputDir();
 clearContents(out);
 cpSync(join(REPO_ROOT, 'app'), join(out, 'app'), { recursive: true });
-cpSync(join(REPO_ROOT, 'screenshots'), join(out, 'screenshots'), { recursive: true });
-writeFileSync(join(out, 'dossier.json'), buildDossier(out, {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
-  app_max_files: 993,
-  app_max_bytes: 16777216,
-  app_path_max_bytes: 1000,
-}));
+try {
+  cpSync(join(REPO_ROOT, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+} catch (error) {
+  // Screenshots are filled by the screenshot session (S8); if that
+  // folder is missing the hand-in cannot be built yet.
+  console.error('Hearth & Ledger hand-in failed: could not copy screenshots/ — is the folder present?');
+  throw error;
+}
+let dossier;
+try {
+  dossier = buildDossier(out, {
+    text_max_bytes: 163840,
+    screenshots: { max: 4, max_bytes: 262144 },
+    app_max_files: 993,
+    app_max_bytes: 16777216,
+    app_path_max_bytes: 1000,
+  });
+} catch (error) {
+  // buildDossier rejects when the hand-in is incomplete — most often
+  // because screenshots/ is still empty (the screenshot session has
+  // not run yet). Say so plainly instead of surfacing the raw error.
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(
+    'Hearth & Ledger hand-in failed: the dossier could not be built. ' +
+    'The usual cause is screenshots/ being empty — run the screenshot session (S8) first. ' +
+    `Underlying error: ${message}`,
+  );
+  throw error;
+}
+writeFileSync(join(out, 'dossier.json'), dossier);

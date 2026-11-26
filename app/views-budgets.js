@@ -11,19 +11,11 @@
 // (never below $0). Edit state lives in a module-level variable so a
 // re-render never loses it.
 
-import { formatMoney } from "./data.js";
+import { formatMoney, formatWhole } from "./data.js";
 import { escapeHtml } from "./views-transactions.js";
 
 // Module-level UI state — survives re-renders.
 let editingCategory = null;
-
-// Whole-dollar amounts print without cents, exactly as the spec writes
-// them ("$4,940", "$6,400"); fractional amounts keep their cents.
-function moneyWhole(n) {
-  const value = Number(n) || 0;
-  if (Number.isInteger(value)) return `$${value.toLocaleString("en-US")}`;
-  return formatMoney(value);
-}
 
 function progressBarHtml(pct, barClass, label) {
   const barPct = Math.min(100, pct);
@@ -71,7 +63,7 @@ export function renderBudgets(store) {
   return `<section class="page budgets-page">
   <h1>Budgets</h1>
   <p class="lede">Monthly spending limits for November 2026, computed from the ledger.</p>
-  <p class="summary-line">Total budgeted ${moneyWhole(total)} · Spent ${formatMoney(spent)} · Remaining ${formatMoney(remaining)}</p>
+  <p class="summary-line">Total budgeted ${formatWhole(total)} · Spent ${formatMoney(spent)} · Remaining ${formatMoney(remaining)}</p>
   <div class="grid-cards">${cards}</div>
 </section>`;
 }
@@ -84,7 +76,7 @@ function goalCard(goal) {
   return `<article class="card goal-card" data-goal-card="${escapeHtml(goal.id)}">
     <h2>${escapeHtml(goal.name)}</h2>
     <p class="goal-pct">${pct}%</p>
-    <p class="goal-remaining">${moneyWhole(goal.saved)} saved of ${moneyWhole(goal.target)} · ${moneyWhole(toGo)} to go</p>
+    <p class="goal-remaining">${formatWhole(goal.saved)} saved of ${formatWhole(goal.target)} · ${formatWhole(toGo)} to go</p>
     ${progressBarHtml(pct, "progress-bar", `${goal.name} ${pct} percent saved`)}
     <div class="goal-actions">
       <span class="inline-field"><input type="number" name="goal-amount" min="0" step="0.01" placeholder="Amount ($)" aria-label="Amount to add or take out for ${escapeHtml(goal.name)}"> <button type="button" class="btn btn-small" data-action="goal-add" data-id="${escapeHtml(goal.id)}">Add money</button> <button type="button" class="btn btn-secondary btn-small" data-action="goal-take" data-id="${escapeHtml(goal.id)}">Take out</button></span>
@@ -100,7 +92,7 @@ export function renderGoals(store) {
   return `<section class="page goals-page">
   <h1>Goals</h1>
   <p class="lede">What the Alvarez household is saving for.</p>
-  <p class="summary-line">Total saved ${moneyWhole(saved)} of ${moneyWhole(target)} (${pct}%)</p>
+  <p class="summary-line">Total saved ${formatWhole(saved)} of ${formatWhole(target)} (${pct}%)</p>
   <div class="grid-cards">${cards}</div>
 </section>`;
 }
@@ -120,12 +112,14 @@ export function bind(root, store, rerender) {
     if (action === "edit-limit") {
       editingCategory = button.dataset.category;
       rerender();
+      focusLimitInput(root, button.dataset.category);
       return;
     }
 
     if (action === "cancel-limit") {
       editingCategory = null;
       rerender();
+      focusEditLimitButton(root, button.dataset.category);
       return;
     }
 
@@ -139,6 +133,7 @@ export function bind(root, store, rerender) {
       store.setBudgetLimit(button.dataset.category, value);
       editingCategory = null;
       rerender();
+      focusEditLimitButton(root, button.dataset.category);
       return;
     }
 
@@ -153,4 +148,21 @@ export function bind(root, store, rerender) {
       rerender();
     }
   });
+}
+
+// Focus helpers: after a re-render, return focus to the control the
+// user was using instead of dropping it to the top of the page.
+function focusLimitInput(root, categoryName) {
+  const card = root.querySelector(`[data-budget-card="${CSS.escape(categoryName)}"]`);
+  const input = card ? card.querySelector('[name="limit-input"]') : null;
+  if (input) {
+    input.focus();
+    input.select();
+  }
+}
+
+function focusEditLimitButton(root, categoryName) {
+  const card = root.querySelector(`[data-budget-card="${CSS.escape(categoryName)}"]`);
+  const button = card ? card.querySelector('[data-action="edit-limit"]') : null;
+  if (button) button.focus();
 }

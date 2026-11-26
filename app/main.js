@@ -59,6 +59,12 @@ function render() {
   markActiveNav();
 }
 
-window.addEventListener("hashchange", render);
+window.addEventListener("hashchange", () => {
+  // A route change is a new page: start at the top, like a real
+  // navigation. State changes (store.subscribe) re-render in place
+  // and must NOT scroll — the user is mid-task on that page.
+  render();
+  window.scrollTo(0, 0);
+});
 store.subscribe(render);
 render();

@@ -16,7 +16,7 @@ import {
   formatMoney,
   formatDate,
 } from "./data.js";
-import { monthlyBars, categoryDonut } from "./charts.js";
+import { monthlyBars, categoryDonut, colorForCategory } from "./charts.js";
 import { escapeHtml } from "./views-transactions.js";
 
 function billRow(bill) {
@@ -39,11 +39,11 @@ export function renderBills(store) {
   <p class="lede">November 2026 bills — ${due.length} unpaid · ${formatMoney(dueTotal)} due.</p>
   <section class="card" aria-labelledby="bills-due-soon">
     <h2 id="bills-due-soon">Due soon</h2>
-    <ul class="bill-list">${due.map(billRow).join("")}</ul>
+    ${due.length ? `<ul class="bill-list">${due.map(billRow).join("")}</ul>` : `<p class="empty-state">No bills due — everything is paid.</p>`}
   </section>
   <section class="card" aria-labelledby="bills-paid">
     <h2 id="bills-paid">Paid</h2>
-    <ul class="bill-list">${paid.map(billRow).join("")}</ul>
+    ${paid.length ? `<ul class="bill-list">${paid.map(billRow).join("")}</ul>` : `<p class="empty-state">No bills paid yet.</p>`}
   </section>
 </section>`;
 }
@@ -56,7 +56,8 @@ function biggestExpenses(store) {
 }
 
 function monthTotalsLine(m) {
-  return `<li><span class="bill-name">${escapeHtml(m.month)}</span><span>income ${formatMoney(m.income)} · spending ${formatMoney(m.spending)} · saved ${formatMoney(m.saved)}</span></li>`;
+  const rate = m.income > 0 ? Math.round((m.saved / m.income) * 100) : 0;
+  return `<li><span class="bill-name">${escapeHtml(m.month)}</span><span>income ${formatMoney(m.income)} · spending ${formatMoney(m.spending)} · saved ${formatMoney(m.saved)} · ${rate}% saved</span></li>`;
 }
 
 export function renderReports(store) {
@@ -73,7 +74,7 @@ export function renderReports(store) {
   const biggestItems = biggest
     .map(
       (tx, i) =>
-        `<li><span class="rank">${i + 1}</span><span class="tx-date">${escapeHtml(formatDate(tx.date))}</span><span class="tx-desc">${escapeHtml(tx.description)}</span><span class="tx-amount negative">${formatMoney(tx.amount)}</span></li>`,
+        `<li><span class="rank">${i + 1}</span><span class="tx-date">${escapeHtml(formatDate(tx.date))}</span><span class="tx-desc">${escapeHtml(tx.description)}</span><span class="chip" style="background:${colorForCategory(tx.category)}">${escapeHtml(tx.category)}</span><span class="tx-amount negative">${formatMoney(tx.amount)}</span></li>`,
     )
     .join("");
 

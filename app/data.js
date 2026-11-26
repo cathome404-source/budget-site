@@ -162,6 +162,14 @@ export function formatMoney(n) {
   });
 }
 
+// Whole-dollar amounts print without cents, exactly as the spec writes
+// them ("$4,940", "$6,400"); fractional amounts keep their cents.
+export function formatWhole(n) {
+  const value = Number(n) || 0;
+  if (Number.isInteger(value)) return `$${value.toLocaleString("en-US")}`;
+  return formatMoney(value);
+}
+
 export function formatDate(iso) {
   const [y, m, d] = String(iso).split("-").map(Number);
   const date = new Date(y, (m || 1) - 1, d || 1);

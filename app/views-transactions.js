@@ -28,10 +28,7 @@ let searchQuery = "";
 let editingId = null;
 
 function sortedTransactions(store) {
-  return [...store.state.transactions].sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    return a.id < b.id ? 1 : -1;
-  });
+  return store.sortedTransactions();
 }
 
 function allFilterCategories(store) {
@@ -76,12 +73,21 @@ function readRow(tx) {
   </tr>`;
 }
 
+function editCategoryOptions(tx) {
+  // The row's current category may not be in the form list
+  // (transfers carry "Savings"); keep it selectable instead of
+  // silently dropping it.
+  const names = formCategories();
+  if (!names.includes(tx.category)) names.push(tx.category);
+  return names;
+}
+
 function editRow(tx) {
-  const categoryOptions = formCategories()
+  const categoryOptions = editCategoryOptions(tx)
     .map((name) => `<option value="${escapeHtml(name)}"${name === tx.category ? " selected" : ""}>${escapeHtml(name)}</option>`)
     .join("");
-  const typeOptions = ["expense", "income"]
-    .map((t) => `<option value="${t}"${t === tx.type ? " selected" : ""}>${t === "income" ? "Income" : "Expense"}</option>`)
+  const typeOptions = ["expense", "income", "transfer"]
+    .map((t) => `<option value="${t}"${t === tx.type ? " selected" : ""}>${t === "income" ? "Income" : t === "transfer" ? "Transfer" : "Expense"}</option>`)
     .join("");
   return `<tr data-tx-id="${escapeHtml(tx.id)}" class="editing-row">
     <td><input type="date" name="edit-date" value="${escapeHtml(tx.date)}" required aria-label="Date"></td>
@@ -217,12 +223,14 @@ export function bind(root, store, rerender) {
     if (action === "edit") {
       editingId = id;
       rerender();
+      focusEditRow(root, id);
       return;
     }
 
     if (action === "cancel") {
       editingId = null;
       rerender();
+      focusEditButton(root, id);
       return;
     }
 
@@ -233,18 +241,35 @@ export function bind(root, store, rerender) {
         const el = row.querySelector(`[name="${name}"]`);
         return el ? el.value : "";
       };
-      const type = get("edit-type") === "income" ? "income" : "expense";
+      const type = get("edit-type");
+      const validType = type === "income" || type === "transfer" ? type : "expense";
       store.editTransaction(id, {
         date: get("edit-date") || "2026-11-26",
         description: get("edit-description") || "",
-        category: type === "income" ? "Income" : get("edit-category") || MISC_CATEGORY,
+        category: validType === "income" ? "Income" : get("edit-category") || MISC_CATEGORY,
         amount: Number(get("edit-amount") || 0),
-        type,
+        type: validType,
       });
       editingId = null;
       rerender();
+      focusEditButton(root, id);
     }
   });
+}
+
+// After a re-render, put keyboard focus where the user's task left
+// off: the edit row's description field when editing starts, the
+// row's Edit button after Save/Cancel, so focus is never lost.
+function focusEditRow(root, id) {
+  const row = root.querySelector(`[data-tx-id="${CSS.escape(id)}"]`);
+  const input = row ? row.querySelector('[name="edit-description"]') : null;
+  if (input) input.focus();
+}
+
+function focusEditButton(root, id) {
+  const row = root.querySelector(`[data-tx-id="${CSS.escape(id)}"]`);
+  const button = row ? row.querySelector('[data-action="edit"]') : null;
+  if (button) button.focus();
 }
 
 // Rebuilds just the table body, the empty state and the totals row —

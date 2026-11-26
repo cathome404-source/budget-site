@@ -29,10 +29,7 @@ function escapeHtml(value) {
 }
 
 function sortedTransactions(store) {
-  return [...store.state.transactions].sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    return a.id < b.id ? 1 : -1;
-  });
+  return store.sortedTransactions();
 }
 
 function amountClass(type) {
@@ -78,6 +75,10 @@ function billItem(bill) {
   return `<li><span class="bill-name">${escapeHtml(bill.name)}</span><span class="bill-due">${escapeHtml(formatDate(bill.due))}</span><span class="bill-amount">${formatMoney(bill.amount)}</span></li>`;
 }
 
+function billsDueFooter(unpaid, unpaidTotal) {
+  return `<p class="card-foot">Total due: <strong>${formatMoney(unpaidTotal)}</strong> across ${unpaid.length} unpaid ${unpaid.length === 1 ? "bill" : "bills"}.</p>`;
+}
+
 export function render(store) {
   const txCount = store.state.transactions.length;
   const income = store.totalIncome();
@@ -85,7 +86,7 @@ export function render(store) {
   const saved = store.totalSaved();
   const balance = store.balance();
   const remaining = store.remainingBudget();
-  const savingsRate = income > 0 ? Math.round((saved / income) * 100) : 0;
+  const savingsRate = store.savingsRate();
   const unpaid = store.unpaidBills().slice().sort((a, b) => (a.due < b.due ? -1 : 1));
   const unpaidTotal = store.unpaidBillsTotal();
 
@@ -111,7 +112,7 @@ export function render(store) {
   return `<section class="page dashboard-page">
   <h1>Dashboard</h1>
   <p class="lede">${HOUSEHOLD_NAME} — ${escapeHtml(HOUSEHOLD_SUBTITLE)}</p>
-  <p class="dashboard-numbers">6 pages · ${txCount} transactions · ${categories.length} categories · ${formatMoney(remaining)} left to spend in November</p>
+  <p class="dashboard-numbers">6 pages · <strong>${txCount} transactions</strong> · <strong>${categories.length} categories</strong> · <strong>${formatMoney(remaining)}</strong> left to spend in November</p>
   <div class="kpi-strip">${kpis}</div>
   <div class="dashboard">
     <div class="dashboard-main">
@@ -137,6 +138,7 @@ export function render(store) {
       <section class="card" aria-labelledby="bills-due-soon">
         <h2 id="bills-due-soon">Bills due soon</h2>
         <ul class="bill-list">${billsDue.map(billItem).join("")}</ul>
+        ${billsDueFooter(unpaid, unpaidTotal)}
         <p><a href="#/bills">See all bills →</a></p>
       </section>
     </div>

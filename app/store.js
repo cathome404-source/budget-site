@@ -154,6 +154,21 @@ export function totalSaved(list = state.transactions) {
   return round2(totalIncome(list) - totalExpenses(list));
 }
 
+// Savings rate as a whole percent (37% in November).
+export function savingsRate(list = state.transactions) {
+  const income = totalIncome(list);
+  return income > 0 ? Math.round((totalSaved(list) / income) * 100) : 0;
+}
+
+// Newest-first ordering, shared by the dashboard and the ledger so
+// both pages always agree on "most recent".
+export function sortedTransactions(list = state.transactions) {
+  return [...list].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return a.id < b.id ? 1 : -1;
+  });
+}
+
 export function balance(list = state.transactions) {
   return round2(openingBalance + totalIncome(list) - totalExpenses(list));
 }
@@ -294,6 +309,8 @@ export const store = {
   totalExpenses,
   totalTransfers,
   totalSaved,
+  savingsRate,
+  sortedTransactions,
   balance,
   spentByCategory,
   totalBudgeted,

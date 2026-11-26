@@ -73,7 +73,11 @@ export function categoryBars(data) {
   const width = barX + barMaxWidth + 90;
 
   const total = rows.reduce((s, d) => s + (Number(d.amount) || 0), 0);
-  const title = `Spending by category in November 2026, total ${formatMoney(total)}. Largest: Housing ${formatMoney(1850)}`;
+  const largest = rows.reduce(
+    (best, d) => (Number(d.amount) || 0) > (Number(best.amount) || 0) ? d : best,
+    rows[0] || { name: "", amount: 0 },
+  );
+  const title = `Spending by category in November 2026, total ${formatMoney(total)}. Largest: ${largest.name} ${formatMoney(largest.amount)}`;
 
   const bars = rows
     .map((d, i) => {
@@ -116,6 +120,15 @@ export function monthlyBars(months) {
 
   const title = "Income versus spending, June to November 2026";
 
+  // Light gridlines at half and full scale, so bar heights read
+  // against something instead of floating in empty space.
+  const gridline = (fraction) => {
+    const y = baseline - fraction * plotHeight;
+    const label = formatMoney(max * fraction);
+    return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - padRight}" y2="${y.toFixed(1)}" class="chart-grid" /><text x="${width - padRight}" y="${(y - 4).toFixed(1)}" class="chart-grid-label" text-anchor="end">${label}</text>`;
+  };
+  const grid = max > 0 ? gridline(0.5) + gridline(1) : "";
+
   const groups = rows
     .map((m, i) => {
       const income = Number(m.income) || 0;
@@ -137,7 +150,7 @@ export function monthlyBars(months) {
     })
     .join("");
 
-  const svg = `<svg class="chart chart-monthly" viewBox="0 0 ${width} ${height}" width="100%" role="img" aria-label="${escapeHtml(title)}"><title>${escapeHtml(title)}</title><line x1="${padLeft}" y1="${baseline}" x2="${width - padRight}" y2="${baseline}" class="chart-axis" />${groups}</svg>`;
+  const svg = `<svg class="chart chart-monthly" viewBox="0 0 ${width} ${height}" width="100%" role="img" aria-label="${escapeHtml(title)}"><title>${escapeHtml(title)}</title>${grid}<line x1="${padLeft}" y1="${baseline}" x2="${width - padRight}" y2="${baseline}" class="chart-axis" />${groups}</svg>`;
 
   const legend = `<div class="chart-legend"><span class="legend-item"><span class="legend-swatch" style="background:${INCOME_COLOR}"></span>Income</span><span class="legend-item"><span class="legend-swatch" style="background:${SPENDING_COLOR}"></span>Spending</span></div>`;
 
